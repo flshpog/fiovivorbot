@@ -1,0 +1,20 @@
+{
+  "name": "fiovivor-discord-bot",
+  "version": "1.0.0",
+  "description": "A comprehensive Discord bot for Fiovivor server",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "jimp": "^0.22.10"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": ["discord", "bot", "fiovivor"],
+  "author": "Your Name",
+  "license": "MIT"
+}
