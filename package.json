@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "discord.js": "^14.14.1",
-    "jimp": "^0.22.10"
+    "jimp": "^0.22.10",
+    "openai": "^4.20.1",
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
