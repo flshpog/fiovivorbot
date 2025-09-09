@@ -1,7 +1,7 @@
 {
   "name": "fiovivor-discord-bot",
   "version": "1.0.0",
-  "description": "A comprehensive Discord bot for Fiovivor server",
+  "description": "A comprehensive Discord bot for Fiovivor",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
