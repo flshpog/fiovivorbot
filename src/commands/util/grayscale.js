@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
+const { SlashCommandBuilder, AttachmentBuilder, PermissionFlagsBits } = require('discord.js');
 const Jimp = require('jimp');
 
 module.exports = {
@@ -12,7 +12,8 @@ module.exports = {
         .addStringOption(option =>
             option.setName('url')
                 .setDescription('URL of the image to convert')
-                .setRequired(false)),
+                .setRequired(false))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
 
     name: 'grayscale',
     description: 'Convert an image to grayscale',

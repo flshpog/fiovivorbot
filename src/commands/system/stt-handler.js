@@ -1,9 +1,10 @@
-// This is a placeholder STT (Speech-to-Text) handler
-// In a real implementation, you would integrate with services like:
-// - Google Cloud Speech-to-Text
-// - Azure Cognitive Services Speech
-// - AWS Transcribe
-// - OpenAI Whisper API
+// Speech-to-Text handler using OpenAI Whisper API
+const OpenAI = require('openai');
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY, // Add your API key to .env file
+});
 
 module.exports = {
     name: 'stt-handler',
@@ -11,82 +12,83 @@ module.exports = {
     async handleVoiceMessage(message) {
         try {
             // Send initial processing message
-            const processingMsg = await message.reply('🎤 Processing speech to text...');
+            const processingMsg = await message.reply('Processing speech to text...');
 
-            // Simulate processing time (remove this in real implementation)
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // TODO: Replace this with actual STT API call
-            // Example structure for real implementation:
-            /*
-            const audioUrl = message.attachments.first()?.url;
-            if (audioUrl) {
-                // Download the audio file
-                const audioBuffer = await this.downloadAudio(audioUrl);
-                
-                // Send to STT service
-                const transcript = await this.transcribeAudio(audioBuffer);
-                
-                // Edit the message with the transcript
-                await processingMsg.edit(`📝 **Transcript:** ${transcript}`);
+            // Get the voice message attachment
+            const attachment = message.attachments.first();
+            if (!attachment) {
+                await processingMsg.edit('❌No voice message found.');
+                return;
             }
-            */
 
-            // Placeholder response
-            await processingMsg.edit('📝 **Transcript:** (placeholder - integrate with your preferred STT service)');
+            // Download the audio file
+            const audioBuffer = await this.downloadAudio(attachment.url);
+
+            // Transcribe using OpenAI Whisper
+            const transcript = await this.transcribeAudio(audioBuffer, attachment.name);
+
+            if (transcript && transcript.trim()) {
+                await processingMsg.edit(`📝 **Transcript:** ${transcript}`);
+            } else {
+                await processingMsg.edit('❌ Could not transcribe the audio. The message might be too short or unclear.');
+            }
 
         } catch (error) {
             console.error('Error processing voice message:', error);
             try {
-                await message.reply('❌ Failed to process the voice message.');
+                await message.reply('❌ Failed to process the voice message. Please try again later.');
             } catch (replyError) {
                 console.error('Error sending STT error message:', replyError);
             }
         }
     },
 
-    // Placeholder methods for real STT implementation
     async downloadAudio(url) {
-        // TODO: Implement audio download logic
-        // Example using fetch:
-        /*
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to download audio');
-        return await response.buffer();
-        */
-        throw new Error('Not implemented - add your audio download logic here');
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to download audio: ${response.status} ${response.statusText}`);
+            }
+            
+            // Get the audio data as an ArrayBuffer, then convert to Buffer
+            const arrayBuffer = await response.arrayBuffer();
+            return Buffer.from(arrayBuffer);
+        } catch (error) {
+            console.error('Error downloading audio:', error);
+            throw new Error('Failed to download audio file');
+        }
     },
 
-    async transcribeAudio(audioBuffer) {
-        // TODO: Implement STT API integration
-        // Example for different services:
-        
-        /*
-        // Google Cloud Speech-to-Text
-        const speech = require('@google-cloud/speech');
-        const client = new speech.SpeechClient();
-        const request = {
-            audio: { content: audioBuffer.toString('base64') },
-            config: {
-                encoding: 'OGG_OPUS',
-                sampleRateHertz: 16000,
-                languageCode: 'en-US',
-            },
-        };
-        const [response] = await client.recognize(request);
-        return response.results.map(result => result.alternatives[0].transcript).join('\n');
-        */
+    async transcribeAudio(audioBuffer, filename) {
+        try {
+            // Create a File-like object from the buffer
+            const audioFile = new File([audioBuffer], filename || 'voice-message.ogg', {
+                type: 'audio/ogg'
+            });
 
-        /*
-        // OpenAI Whisper API
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-        const transcription = await openai.audio.transcriptions.create({
-            file: audioBuffer,
-            model: "whisper-1",
-        });
-        return transcription.text;
-        */
+            // Use OpenAI Whisper to transcribe
+            const transcription = await openai.audio.transcriptions.create({
+                file: audioFile,
+                model: "whisper-1",
+                language: "en", // You can change this or remove it for auto-detection
+                response_format: "text"
+            });
 
-        throw new Error('Not implemented - add your STT API integration here');
+            return transcription;
+
+        } catch (error) {
+            console.error('Error transcribing audio with Whisper:', error);
+            
+            // Handle specific OpenAI errors
+            if (error.status === 401) {
+                throw new Error('Invalid OpenAI API key');
+            } else if (error.status === 429) {
+                throw new Error('OpenAI API rate limit exceeded');
+            } else if (error.status === 413) {
+                throw new Error('Audio file too large (max 25MB)');
+            }
+            
+            throw new Error('Failed to transcribe audio');
+        }
     }
 };
