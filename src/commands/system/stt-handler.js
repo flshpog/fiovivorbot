@@ -1,5 +1,7 @@
 // Speech-to-Text handler using OpenAI Whisper API
 const OpenAI = require('openai');
+import 'dotenv/config';
+import OpenAI from "openai";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
