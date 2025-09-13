@@ -46,6 +46,39 @@ module.exports = {
                     }
                 }
             }
+            
+            // Handle Stop Rocks button
+            else if (interaction.customId.startsWith('stop_rocks_')) {
+                try {
+                    const userId = interaction.customId.split('_')[2];
+                    
+                    // Check if the user clicking is the same user who started rocks
+                    if (interaction.user.id !== userId) {
+                        return await interaction.reply({
+                            content: 'Only the person who started the rock draw can stop it.',
+                            ephemeral: true
+                        });
+                    }
+
+                    // Stop the rocks game
+                    if (interaction.client.rocksGames) {
+                        interaction.client.rocksGames.set(userId, { active: false });
+                    }
+
+                    // Update the message to show it was stopped
+                    await interaction.update({
+                        content: interaction.message.content + '\n\n⏹️ **Rock draw stopped by ' + interaction.user.username + '**',
+                        components: [] // Remove the stop button
+                    });
+
+                } catch (error) {
+                    console.error('Error handling stop rocks button:', error);
+                    await interaction.reply({
+                        content: 'There was an error stopping the rock draw.',
+                        ephemeral: true
+                    });
+                }
+            }
         }
     },
 };

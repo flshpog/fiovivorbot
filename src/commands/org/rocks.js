@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -32,44 +32,37 @@ module.exports = {
                 });
             }
 
-            if (players.length > 50) {
+            if (players.length > 20) {
                 return await interaction.reply({
-                    content: 'Too many players! Please limit to 50 players or fewer.',
+                    content: 'Too many players! Please limit to 20 players or fewer for the rock draw.',
                     ephemeral: true
                 });
             }
 
-            // Randomly select a player to eliminate
+            // Randomly decide which player gets the purple rock (eliminated)
             const eliminatedIndex = Math.floor(Math.random() * players.length);
-            const eliminatedPlayer = players[eliminatedIndex];
-            const remainingPlayers = players.filter((_, index) => index !== eliminatedIndex);
 
-            const embed = new EmbedBuilder()
-                .setTitle('🪨 Rock Draw Results')
-                .setColor(0xFF0000)
-                .addFields(
-                    {
-                        name: '❌ Eliminated Player',
-                        value: `**${eliminatedPlayer}**`,
-                        inline: false
-                    },
-                    {
-                        name: '✅ Safe Players',
-                        value: remainingPlayers.length > 0 ? remainingPlayers.map(p => `• ${p}`).join('\n') : 'None',
-                        inline: false
-                    },
-                    {
-                        name: '📊 Statistics',
-                        value: `**Total Players:** ${players.length}\n**Eliminated:** 1\n**Remaining:** ${remainingPlayers.length}`,
-                        inline: false
-                    }
-                )
-                .setFooter({ 
-                    text: `${eliminatedPlayer} drew the unlucky rock! 😢` 
-                })
-                .setTimestamp();
+            // Create Stop Rocks button
+            const stopButton = new ButtonBuilder()
+                .setCustomId(`stop_rocks_${interaction.user.id}`)
+                .setLabel('Stop Rocks!')
+                .setStyle(ButtonStyle.Danger)
+                .setEmoji('⏹️');
 
-            await interaction.reply({ embeds: [embed] });
+            const row = new ActionRowBuilder().addComponents(stopButton);
+
+            // Send initial announcement
+            const initialMessage = `@[ ${interaction.user.username} ] has started rocks!\n` +
+                                 `${players.join(', ')} will now draw rocks.\n` +
+                                 `Whoever draws the **PURPLE** rock will be eliminated.`;
+
+            const rocksMessage = await interaction.reply({
+                content: initialMessage,
+                components: [row]
+            });
+
+            // Start the rock drawing sequence
+            await this.startRockDrawing(rocksMessage, players, eliminatedIndex, interaction.user.id);
 
         } catch (error) {
             console.error('Error in rocks command:', error);
@@ -78,6 +71,104 @@ module.exports = {
                 ephemeral: true
             });
         }
+    },
+
+    async startRockDrawing(message, players, eliminatedIndex, userId) {
+        let currentPlayerIndex = 0;
+        let gameActive = true;
+
+        // Store game state for stop button
+        if (!message.client.rocksGames) {
+            message.client.rocksGames = new Map();
+        }
+        message.client.rocksGames.set(userId, { active: false });
+
+        for (let i = 0; i < players.length && gameActive; i++) {
+            currentPlayerIndex = i;
+            
+            // Check if game was stopped
+            const gameState = message.client.rocksGames.get(userId);
+            if (!gameState || !gameState.active) {
+                gameActive = false;
+                break;
+            }
+
+            const player = players[i];
+            const isEliminated = (i === eliminatedIndex);
+
+            // Wait a moment before starting each player's turn
+            await this.sleep(1000);
+
+            // Show player drawing
+            await message.edit({
+                content: message.content + `\n\n${player} draws a rock...`,
+                components: message.components
+            });
+
+            await this.sleep(1000);
+
+            // Start the suspense sequence
+            const dots = ['...', '....', '.....', '....', '...'];
+            
+            for (let dotIndex = 0; dotIndex < dots.length; dotIndex++) {
+                // Check if game was stopped during animation
+                const gameState = message.client.rocksGames.get(userId);
+                if (!gameState || !gameState.active) {
+                    gameActive = false;
+                    break;
+                }
+
+                await message.edit({
+                    content: message.content.replace(/The color is\.+$|$/, `\nThe color is${dots[dotIndex]}`),
+                    components: message.components
+                });
+                
+                await this.sleep(1000);
+            }
+
+            if (!gameActive) break;
+
+            // Reveal the color
+            const color = isEliminated ? '**PURPLE**' : '**WHITE**';
+            const colorEmoji = isEliminated ? '🟣' : '⚪';
+            
+            await message.edit({
+                content: message.content.replace(/The color is\.+$/, `The color is... ${color} ${colorEmoji}`),
+                components: message.components
+            });
+
+            if (isEliminated) {
+                // Player eliminated - end game
+                await this.sleep(2000);
+                
+                await message.edit({
+                    content: message.content + 
+                           `\n${player}, You live to fight another day... NOT!\n` +
+                           `I'm sorry ${player}, the only rock left is purple. You have been eliminated in the worst way possible.\n\n` +
+                           `**Goodbye.** *(edited)*`,
+                    components: [] // Remove stop button
+                });
+                
+                // Clean up game state
+                message.client.rocksGames.delete(userId);
+                return;
+            } else {
+                // Player is safe
+                await this.sleep(1000);
+                
+                await message.edit({
+                    content: message.content + `\n${player}, You live to fight another day.`,
+                    components: message.components
+                });
+            }
+        }
+
+        // Clean up if game ended without elimination (shouldn't happen, but safety)
+        message.client.rocksGames.delete(userId);
+    },
+
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     },
 
     parsePlayers(input) {
