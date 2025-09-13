@@ -4,6 +4,7 @@ node_modules/
 # Environment variables
 .env
 src/index.js
+src/commands/system/stt-handler.js
 
 # Data files
 data/
