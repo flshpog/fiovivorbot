@@ -51,7 +51,9 @@ module.exports = {
         const customResponse = client.customCommands.get(commandName);
         if (customResponse) {
             try {
-                await message.reply(customResponse);
+                // Process newlines in custom command responses
+                const processedResponse = customResponse.replace(/\\n/g, '\n');
+                await message.reply(processedResponse);
                 return;
             } catch (error) {
                 console.error('Error executing custom command:', error);

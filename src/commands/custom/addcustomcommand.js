@@ -21,9 +21,9 @@ module.exports = {
             const response = interaction.options.getString('response');
 
             // Check if command name contains invalid characters
-            if (!/^[a-z0-9]+$/i.test(name)) {
+            if (!/^[a-z0-9_-]+$/i.test(name)) {
                 return await interaction.reply({
-                    content: 'Command name can only contain letters and numbers.',
+                    content: 'Command name can only contain letters, numbers, underscores, and dashes.',
                     ephemeral: true
                 });
             }

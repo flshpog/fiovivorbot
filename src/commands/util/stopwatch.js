@@ -219,45 +219,6 @@ module.exports = {
             interaction.reply({ embeds: [embed] }));
     },
 
-    async handleList(interaction, isSlash) {
-        const client = isSlash ? interaction.client : interaction.client;
-        
-        if (client.stopwatches.size === 0) {
-            const errorMsg = 'No active stopwatches found.';
-            return await (isSlash ? 
-                interaction.reply({ content: errorMsg, ephemeral: true }) :
-                interaction.reply(errorMsg));
-        }
-
-        const currentTime = Date.now();
-        const embed = new EmbedBuilder()
-            .setTitle('⏱️ Active Stopwatches')
-            .setColor(0x5865F2)
-            .setDescription(`Found ${client.stopwatches.size} active stopwatch${client.stopwatches.size !== 1 ? 'es' : ''}:`)
-            .setTimestamp();
-
-        let fieldCount = 0;
-        for (const [userId, data] of client.stopwatches.entries()) {
-            if (fieldCount >= 25) break; // Discord embed field limit
-            
-            const elapsed = currentTime - data.startTime;
-            embed.addFields({
-                name: `👤 ${data.userName}`,
-                value: `**Started:** <t:${Math.floor(data.startTime / 1000)}:R>\n**Elapsed:** ${this.formatElapsedTime(elapsed)}`,
-                inline: true
-            });
-            fieldCount++;
-        }
-
-        if (client.stopwatches.size > 25) {
-            embed.setFooter({ text: `Showing 25 of ${client.stopwatches.size} active stopwatches` });
-        }
-
-        await (isSlash ? 
-            interaction.reply({ embeds: [embed] }) :
-            interaction.reply({ embeds: [embed] }));
-    },
-
     formatElapsedTime(milliseconds) {
         const totalMs = milliseconds;
         const seconds = Math.floor(milliseconds / 1000);
