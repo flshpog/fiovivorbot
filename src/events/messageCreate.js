@@ -9,20 +9,44 @@ module.exports = {
         const client = message.client;
         const prefix = client.config.prefix;
 
+        // Debug logging for attachments
+        if (message.attachments.size > 0) {
+            console.log('Message has attachments:');
+            message.attachments.forEach(att => {
+                console.log(`- ${att.filename}: ${att.contentType}, flags: ${att.flags}`);
+            });
+        }
+
         // Check for voice messages (STT feature)
-        if (message.flags?.has('IsVoiceMessage') || 
-            (message.attachments.size > 0 && 
-             message.attachments.some(att => att.contentType?.includes('ogg')))) {
+        if (message.attachments.size > 0) {
+            const voiceAttachment = message.attachments.find(att => 
+                att.contentType === 'audio/ogg' || 
+                att.contentType === 'audio/ogg; codecs=opus' ||
+                att.filename?.endsWith('.ogg') ||
+                (att.flags && att.flags & 4) // Voice message flag
+            );
             
-            const sttCommand = client.slashCommands.get('stt-handler');
-            if (sttCommand && sttCommand.handleVoiceMessage) {
-                try {
-                    await sttCommand.handleVoiceMessage(message);
-                } catch (error) {
-                    console.error('Error processing voice message:', error);
+            if (voiceAttachment) {
+                console.log('🎤 VOICE MESSAGE DETECTED! Processing...');
+                console.log('Voice attachment details:', {
+                    filename: voiceAttachment.filename,
+                    contentType: voiceAttachment.contentType,
+                    size: voiceAttachment.size,
+                    url: voiceAttachment.url
+                });
+                
+                const sttCommand = client.slashCommands.get('stt-handler');
+                if (sttCommand && sttCommand.handleVoiceMessage) {
+                    try {
+                        await sttCommand.handleVoiceMessage(message);
+                    } catch (error) {
+                        console.error('Error processing voice message:', error);
+                    }
+                } else {
+                    console.log('❌ STT handler not found');
                 }
+                return;
             }
-            return;
         }
 
         // Handle prefix commands
@@ -35,7 +59,9 @@ module.exports = {
                 
                 if (customResponse) {
                     try {
-                        await message.reply(customResponse);
+                        // Process newlines in custom command responses
+                        const processedResponse = customResponse.replace(/\\n/g, '\n');
+                        await message.reply(processedResponse);
                     } catch (error) {
                         console.error('Error executing custom command:', error);
                     }
@@ -47,7 +73,13 @@ module.exports = {
         const args = message.content.slice(prefix.length).trim().split(/ +/);
         const commandName = args.shift().toLowerCase();
 
-        // Check custom commands first
+        // Check application commands first
+        const appCommands = require('../commands/util/application-commands');
+        if (await appCommands.handleApplicationCommand(message, commandName)) {
+            return; // Application command was handled
+        }
+
+        // Check custom commands
         const customResponse = client.customCommands.get(commandName);
         if (customResponse) {
             try {
