@@ -1,10 +1,8 @@
 // Speech-to-Text handler using OpenAI Whisper API
 const OpenAI = require('openai');
-import 'dotenv/config';
-import OpenAI from "openai";
 
 // Initialize OpenAI client
-const openai = new OpenAI({
+const client = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY, // Add your API key to .env file
 });
 
@@ -14,12 +12,12 @@ module.exports = {
     async handleVoiceMessage(message) {
         try {
             // Send initial processing message
-            const processingMsg = await message.reply('Processing speech to text...');
+            const processingMsg = await message.reply('🎤 Processing speech to text...');
 
             // Get the voice message attachment
             const attachment = message.attachments.first();
             if (!attachment) {
-                await processingMsg.edit('❌No voice message found.');
+                await processingMsg.edit('❌ No voice message found.');
                 return;
             }
 
@@ -69,7 +67,7 @@ module.exports = {
             });
 
             // Use OpenAI Whisper to transcribe
-            const transcription = await openai.audio.transcriptions.create({
+            const transcription = await client.audio.transcriptions.create({
                 file: audioFile,
                 model: "whisper-1",
                 language: "en", // You can change this or remove it for auto-detection
