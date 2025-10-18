@@ -88,7 +88,7 @@ module.exports = {
 
         for (let i = 0; i < players.length && gameActive; i++) {
             currentPlayerIndex = i;
-            
+
             // Check if game was stopped
             const gameState = message.client.rocksGames.get(userId);
             if (!gameState || !gameState.active) {
@@ -102,17 +102,14 @@ module.exports = {
             // Wait a moment before starting each player's turn
             await this.sleep(1000);
 
-            // Show player drawing
-            await message.edit({
-                content: message.content + `\n\n${player} draws a rock...`,
-                components: message.components
-            });
+            // Send NEW message: Player draws a rock
+            const drawMessage = await message.channel.send(`${player} draws a rock.`);
 
             await this.sleep(1000);
 
-            // Start the suspense sequence
+            // Edit that message to show suspense with dots
             const dots = ['...', '....', '.....', '....', '...'];
-            
+
             for (let dotIndex = 0; dotIndex < dots.length; dotIndex++) {
                 // Check if game was stopped during animation
                 const gameState = message.client.rocksGames.get(userId);
@@ -121,48 +118,56 @@ module.exports = {
                     break;
                 }
 
-                await message.edit({
-                    content: message.content.replace(/The color is\.+$|$/, `\nThe color is${dots[dotIndex]}`),
-                    components: message.components
-                });
-                
+                await drawMessage.edit(`${player} draws a rock.\nThe color is${dots[dotIndex]}`);
+
                 await this.sleep(1000);
             }
 
             if (!gameActive) break;
 
-            // Reveal the color
+            // Reveal the color in the edited message
             const color = isEliminated ? '**PURPLE**' : '**WHITE**';
             const colorEmoji = isEliminated ? '🟣' : '⚪';
-            
-            await message.edit({
-                content: message.content.replace(/The color is\.+$/, `The color is... ${color} ${colorEmoji}`),
-                components: message.components
-            });
+
+            await drawMessage.edit(`${player} draws a rock.\nThe color is... ${color} ${colorEmoji}`);
+
+            await this.sleep(1500);
 
             if (isEliminated) {
-                // Player eliminated - end game
-                await this.sleep(2000);
-                
+                // Send NEW message: Player eliminated
+                let eliminationMessage;
+
+                if (i === players.length - 1) {
+                    // Last player - only rock left is purple
+                    eliminationMessage = `${player}, You live to fight another day... NOT!\n` +
+                                       `I'm sorry ${player}, the only rock left is purple. You have been eliminated in the worst way possible.\n\n` +
+                                       `**Goodbye.**`;
+                } else {
+                    // Eliminated before last draw
+                    eliminationMessage = `I'm sorry ${player}, you've been eliminated in the worst way possible.\n\n` +
+                                       `**Goodbye.**`;
+                }
+
+                await message.channel.send(eliminationMessage);
+
+                // Update initial message to remove stop button
                 await message.edit({
-                    content: message.content + 
-                           `\n${player}, You live to fight another day... NOT!\n` +
-                           `I'm sorry ${player}, the only rock left is purple. You have been eliminated in the worst way possible.\n\n` +
-                           `**Goodbye.** *(edited)*`,
-                    components: [] // Remove stop button
+                    content: message.content,
+                    components: []
                 });
-                
+
                 // Clean up game state
                 message.client.rocksGames.delete(userId);
                 return;
             } else {
-                // Player is safe
-                await this.sleep(1000);
-                
-                await message.edit({
-                    content: message.content + `\n${player}, You live to fight another day.`,
-                    components: message.components
-                });
+                // Send NEW message: Player is safe
+                await message.channel.send(`${player}, You live to fight another day.`);
+
+                // If not the last player, send NEW message that next person draws
+                if (i < players.length - 1) {
+                    await this.sleep(500);
+                    // The next iteration will handle the next player's draw
+                }
             }
         }
 
