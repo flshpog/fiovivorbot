@@ -139,7 +139,7 @@ module.exports = {
             try {
                 // Move the channel while preserving permissions
                 await channel.setParent(category, {
-                    lockPermissions: true,
+                    lockPermissions: false,
                     reason: `Channel moved by ${user.tag} using chmove command`
                 });
 
