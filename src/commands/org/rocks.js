@@ -52,14 +52,17 @@ module.exports = {
             const row = new ActionRowBuilder().addComponents(stopButton);
 
             // Send initial announcement
-            const initialMessage = `@[ ${interaction.user.username} ] has started rocks!\n` +
+            const initialMessage = `${interaction.user} has started rocks!\n` +
                                  `${players.join(', ')} will now draw rocks.\n` +
                                  `Whoever draws the **PURPLE** rock will be eliminated.`;
 
-            const rocksMessage = await interaction.reply({
+            await interaction.reply({
                 content: initialMessage,
-                components: [row]
+                components: [row],
+                fetchReply: true
             });
+
+            const rocksMessage = await interaction.fetchReply();
 
             // Start the rock drawing sequence
             await this.startRockDrawing(rocksMessage, players, eliminatedIndex, interaction.user.id);
@@ -81,7 +84,7 @@ module.exports = {
         if (!message.client.rocksGames) {
             message.client.rocksGames = new Map();
         }
-        message.client.rocksGames.set(userId, { active: false });
+        message.client.rocksGames.set(userId, { active: true });
 
         for (let i = 0; i < players.length && gameActive; i++) {
             currentPlayerIndex = i;
