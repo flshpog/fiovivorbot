@@ -74,7 +74,7 @@ module.exports = {
 
             for (const channel of confessionalChannels) {
                 sendPromises.push(
-                    channel.send(`📢 **Announcement:**\n${message}`)
+                    channel.send(`${message}`)
                         .then(() => {
                             results.success++;
                         })
