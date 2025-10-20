@@ -18,21 +18,21 @@ module.exports = {
                 .addChannelTypes(ChannelType.GuildCategory)
                 .setRequired(true))
         .addStringOption(option =>
-            option.setName('name')
-                .setDescription('Name for the alliance channel')
-                .setRequired(true))
-        .addStringOption(option =>
             option.setName('roles')
                 .setDescription('Space-separated role IDs or mentions for alliance members')
                 .setRequired(true))
+        .addStringOption(option =>
+            option.setName('requested')
+                .setDescription('Who requested this alliance (only applies to alliances, not 1-1s)')
+                .setRequired(false))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 
     async execute(interaction) {
         try {
             const type = interaction.options.getString('type');
             const category = interaction.options.getChannel('category');
-            const allianceName = interaction.options.getString('name');
             const rolesInput = interaction.options.getString('roles');
+            const requestedBy = interaction.options.getString('requested');
 
             // Validate category
             if (category.type !== ChannelType.GuildCategory) {
@@ -71,8 +71,8 @@ module.exports = {
                 });
             }
 
-            // Create channel name based on type
-            const channelName = allianceName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+            // Create channel name based on role names
+            const channelName = validRoles.map(r => r.name.toLowerCase().replace(/[^a-z0-9]/g, '-')).join('-');
 
             // Check if alliance already exists
             const existingChannel = category.children.cache.find(
@@ -146,9 +146,20 @@ module.exports = {
 
             const channelType = type === '1on1' ? '1-on-1' : 'alliance';
 
+            // Send welcome message in the channel
+            let welcomeMessage = `🤝 **Welcome!**\n\n` +
+                `This is a private ${channelType} for:\n` +
+                `${validRoles.map(role => `• ${role}`).join('\n')}`;
+
+            // Only add "requested by" for alliances if the requested field is filled
+            if (type === 'alliance' && requestedBy) {
+                welcomeMessage += `\n\nThis alliance was requested by ${requestedBy}`;
+            }
+
+            await allianceChannel.send(welcomeMessage);
+
             let responseMessage = `✅ ${channelType.charAt(0).toUpperCase() + channelType.slice(1)} channel created: ${allianceChannel}\n\n` +
                                  `**Type:** ${channelType}\n` +
-                                 `**Name:** ${allianceName}\n` +
                                  `**Roles with access:** ${validRoles.map(r => r.name).join(', ')}`;
 
             if (invalidRoles.length > 0) {
