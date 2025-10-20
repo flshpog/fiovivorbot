@@ -72,8 +72,7 @@ module.exports = {
             }
 
             // Create channel name based on type
-            const typePrefix = type === '1on1' ? '1on1' : 'alliance';
-            const channelName = `${typePrefix}-${allianceName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+            const channelName = allianceName.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
             // Check if alliance already exists
             const existingChannel = category.children.cache.find(
@@ -142,17 +141,10 @@ module.exports = {
                 type: ChannelType.GuildText,
                 parent: category,
                 permissionOverwrites: permissionOverwrites,
-                topic: `Private ${channelTypeLabel} channel for: ${validRoles.map(r => r.name).join(', ')}`
+                topic: validRoles.map(r => r.name).join(', ')
             });
 
-            // Send welcome message in the channel
             const channelType = type === '1on1' ? '1-on-1' : 'alliance';
-            await allianceChannel.send(
-                `🤝 **Welcome!**\n\n` +
-                `This is a private ${channelType} channel for:\n` +
-                `${validRoles.map(role => `• ${role}`).join('\n')}\n\n` +
-                `This ${channelType} was requested by ${interaction.user}`
-            );
 
             let responseMessage = `✅ ${channelType.charAt(0).toUpperCase() + channelType.slice(1)} channel created: ${allianceChannel}\n\n` +
                                  `**Type:** ${channelType}\n` +
