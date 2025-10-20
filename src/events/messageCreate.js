@@ -1,4 +1,5 @@
-const { Events } = require('discord.js');
+const { Events, EmbedBuilder } = require('discord.js');
+const { LOG_CHANNEL_ID, COLORS } = require('../config/logging');
 
 module.exports = {
     name: Events.MessageCreate,
@@ -56,12 +57,34 @@ module.exports = {
             if (content.startsWith(prefix)) {
                 const commandName = content.slice(prefix.length).split(' ')[0];
                 const customResponse = client.customCommands.get(commandName);
-                
+
                 if (customResponse) {
                     try {
                         // Process newlines in custom command responses
                         const processedResponse = customResponse.replace(/\\n/g, '\n');
                         await message.reply(processedResponse);
+
+                        // Log custom command usage
+                        try {
+                            const logChannel = message.guild.channels.cache.get(LOG_CHANNEL_ID);
+                            if (logChannel) {
+                                const embed = new EmbedBuilder()
+                                    .setColor(COLORS.CUSTOM_COMMAND)
+                                    .setTitle('⚡ Custom Command Triggered')
+                                    .setDescription(`**Custom command used in ${message.channel}**`)
+                                    .addFields(
+                                        { name: 'User', value: `${message.author.tag} (${message.author.id})`, inline: true },
+                                        { name: 'Command', value: `!${commandName}`, inline: true },
+                                        { name: 'Channel', value: `${message.channel.name}`, inline: true }
+                                    )
+                                    .setThumbnail(message.author.displayAvatarURL())
+                                    .setTimestamp();
+
+                                await logChannel.send({ embeds: [embed] });
+                            }
+                        } catch (logError) {
+                            console.error('Error logging custom command:', logError);
+                        }
                     } catch (error) {
                         console.error('Error executing custom command:', error);
                     }
@@ -86,6 +109,29 @@ module.exports = {
                 // Process newlines in custom command responses
                 const processedResponse = customResponse.replace(/\\n/g, '\n');
                 await message.reply(processedResponse);
+
+                // Log custom command usage
+                try {
+                    const logChannel = message.guild.channels.cache.get(LOG_CHANNEL_ID);
+                    if (logChannel) {
+                        const embed = new EmbedBuilder()
+                            .setColor(COLORS.CUSTOM_COMMAND)
+                            .setTitle('⚡ Custom Command Triggered')
+                            .setDescription(`**Custom command used in ${message.channel}**`)
+                            .addFields(
+                                { name: 'User', value: `${message.author.tag} (${message.author.id})`, inline: true },
+                                { name: 'Command', value: `!${commandName}`, inline: true },
+                                { name: 'Channel', value: `${message.channel.name}`, inline: true }
+                            )
+                            .setThumbnail(message.author.displayAvatarURL())
+                            .setTimestamp();
+
+                        await logChannel.send({ embeds: [embed] });
+                    }
+                } catch (logError) {
+                    console.error('Error logging custom command:', logError);
+                }
+
                 return;
             } catch (error) {
                 console.error('Error executing custom command:', error);
