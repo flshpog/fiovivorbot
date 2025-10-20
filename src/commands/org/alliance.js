@@ -153,7 +153,7 @@ module.exports = {
 
             // Only add "requested by" for alliances if the requested field is filled
             if (type === 'alliance' && requestedBy) {
-                welcomeMessage += `\n\nThis alliance was requested by ${requestedBy}`;
+                welcomeMessage += `\n\nThis alliance was requested by **${requestedBy}**`;
             }
 
             await allianceChannel.send(welcomeMessage);
