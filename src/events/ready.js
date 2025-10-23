@@ -1,4 +1,5 @@
 const { Events, REST, Routes } = require('discord.js');
+const RoleScheduler = require('../utils/roleScheduler');
 
 module.exports = {
     name: Events.ClientReady,
@@ -30,5 +31,10 @@ module.exports = {
         }
 
         client.user.setActivity('Fiovivor Server', { type: 'WATCHING' });
+
+        // Initialize and start role scheduler
+        client.roleScheduler = new RoleScheduler(client);
+        client.roleScheduler.start();
+        console.log('🌙 Role scheduler initialized and started');
     },
 };
