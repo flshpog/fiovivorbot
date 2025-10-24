@@ -1,5 +1,6 @@
 // Speech-to-Text handler using OpenAI Whisper API
 const OpenAI = require('openai');
+const { toFile } = require('openai');
 
 // Initialize OpenAI client
 const client = new OpenAI({
@@ -61,11 +62,10 @@ module.exports = {
 
     async transcribeAudio(audioBuffer, filename) {
         try {
-            // Create a Blob from the buffer (Node.js 18+ has native Blob support)
-            const audioBlob = new Blob([audioBuffer], { type: 'audio/ogg' });
-
             // Convert to File using OpenAI's toFile helper
-            const audioFile = await client.toFile(audioBlob, filename || 'voice-message.ogg');
+            const audioFile = await toFile(audioBuffer, filename || 'voice-message.ogg', {
+                type: 'audio/ogg'
+            });
 
             // Use OpenAI Whisper to transcribe
             const transcription = await client.audio.transcriptions.create({
