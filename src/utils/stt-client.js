@@ -156,10 +156,10 @@ class ScriptySTTClient {
                 }
             });
 
-            // Wait for InitializationComplete
+            // Wait for InitializationComplete or StatusConnectionData
             const initResponse = await this.readMessage();
-            if (!initResponse.InitializationComplete) {
-                throw new Error('Expected InitializationComplete, got: ' + JSON.stringify(initResponse));
+            if (!initResponse.InitializationComplete && !initResponse.StatusConnectionData) {
+                throw new Error('Expected InitializationComplete or StatusConnectionData, got: ' + JSON.stringify(initResponse));
             }
             console.log('Stream initialized');
 
