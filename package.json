@@ -4,19 +4,23 @@
      "description": "A comprehensive Discord bot for Fiovivor",
      "main": "src/index.js",
      "scripts": {
-       "start": "node src/index.js",
-       "dev": "nodemon src/index.js"
+          "start": "node src/index.js",
+          "dev": "nodemon src/index.js"
      },
      "dependencies": {
-       "discord.js": "^14.14.1",
-       "jimp": "^0.22.10",
-       "openai": "^4.20.1",
-       "dotenv": "^16.3.1"
+          "discord.js": "^14.14.1",
+          "dotenv": "^16.3.1",
+          "jimp": "^0.22.10",
+          "openai": "^6.6.0"
      },
      "devDependencies": {
-       "nodemon": "^3.0.2"
+          "nodemon": "^3.0.2"
      },
-     "keywords": ["discord", "bot", "fiovivor"],
+     "keywords": [
+          "discord",
+          "bot",
+          "fiovivor"
+     ],
      "author": "Your Name",
      "license": "MIT"
-   }
+}
