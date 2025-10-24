@@ -1,19 +1,23 @@
 // Speech-to-Text handler using OpenAI Whisper API
 const OpenAI = require('openai');
-const { toFile } = require('openai');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 // Initialize OpenAI client
-const client = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY, // Add your API key to .env file
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
 });
 
 module.exports = {
     name: 'stt-handler',
-    
+
     async handleVoiceMessage(message) {
+        let processingMsg;
+
         try {
             // Send initial processing message
-            const processingMsg = await message.reply('🎤 Processing speech to text...');
+            processingMsg = await message.reply('🎤 Processing speech to text...');
 
             // Get the voice message attachment
             const attachment = message.attachments.first();
@@ -22,74 +26,71 @@ module.exports = {
                 return;
             }
 
+            console.log('📥 Downloading audio from:', attachment.url);
+
             // Download the audio file
-            const audioBuffer = await this.downloadAudio(attachment.url);
+            const response = await fetch(attachment.url);
+            if (!response.ok) {
+                throw new Error(`Failed to download: ${response.status}`);
+            }
 
-            // Transcribe using OpenAI Whisper
-            const transcript = await this.transcribeAudio(audioBuffer, attachment.name);
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = Buffer.from(arrayBuffer);
 
-            if (transcript && transcript.trim()) {
-                await processingMsg.edit(`📝 **Transcript:** ${transcript}`);
+            console.log(`✅ Downloaded ${audioBuffer.length} bytes`);
+
+            // Save to temporary file
+            const tempFile = path.join(os.tmpdir(), `discord-voice-${Date.now()}.ogg`);
+            fs.writeFileSync(tempFile, audioBuffer);
+
+            console.log('🔊 Transcribing audio...');
+
+            // Transcribe using Whisper
+            const transcription = await openai.audio.transcriptions.create({
+                file: fs.createReadStream(tempFile),
+                model: 'whisper-1',
+                language: 'en',
+            });
+
+            // Clean up temp file
+            fs.unlinkSync(tempFile);
+
+            console.log('✅ Transcription complete');
+
+            // Send transcript
+            if (transcription.text && transcription.text.trim()) {
+                await processingMsg.edit(`📝 **Transcript:** ${transcription.text}`);
             } else {
                 await processingMsg.edit('❌ Could not transcribe the audio. The message might be too short or unclear.');
             }
 
         } catch (error) {
-            console.error('Error processing voice message:', error);
-            try {
-                await message.reply('❌ Failed to process the voice message. Please try again later.');
-            } catch (replyError) {
-                console.error('Error sending STT error message:', replyError);
+            console.error('❌ STT Error:', error);
+
+            // Send user-friendly error message
+            const errorMsg = this.getErrorMessage(error);
+
+            if (processingMsg) {
+                await processingMsg.edit(`❌ ${errorMsg}`);
+            } else {
+                await message.reply(`❌ ${errorMsg}`);
             }
         }
     },
 
-    async downloadAudio(url) {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Failed to download audio: ${response.status} ${response.statusText}`);
-            }
-            
-            // Get the audio data as an ArrayBuffer, then convert to Buffer
-            const arrayBuffer = await response.arrayBuffer();
-            return Buffer.from(arrayBuffer);
-        } catch (error) {
-            console.error('Error downloading audio:', error);
-            throw new Error('Failed to download audio file');
+    getErrorMessage(error) {
+        if (error.status === 401 || error.message?.includes('API key')) {
+            return 'Invalid OpenAI API key. Please check your configuration.';
         }
-    },
-
-    async transcribeAudio(audioBuffer, filename) {
-        try {
-            // Convert to File using OpenAI's toFile helper
-            const audioFile = await toFile(audioBuffer, filename || 'voice-message.ogg', {
-                type: 'audio/ogg'
-            });
-
-            // Use OpenAI Whisper to transcribe
-            const transcription = await client.audio.transcriptions.create({
-                file: audioFile,
-                model: "whisper-1",
-                language: "en", // You can change this or remove it for auto-detection
-                response_format: "text"
-            });
-
-            return transcription;
-
-        } catch (error) {
-            console.error('Error transcribing audio with Whisper:', error);
-
-            // Handle specific OpenAI errors
-            if (error.status === 401) {
-                throw new Error('Invalid OpenAI API key');
-            } else if (error.status === 429) {
-                throw new Error('OpenAI API rate limit exceeded');
-            } else if (error.status === 413) {
-                throw new Error('Audio file too large (max 25MB)');
-            }
-
-            throw new Error('Failed to transcribe audio');
+        if (error.status === 429) {
+            return 'OpenAI API rate limit exceeded. Please try again later.';
         }
+        if (error.status === 413) {
+            return 'Audio file too large (max 25MB).';
+        }
+        if (error.message?.includes('download')) {
+            return 'Failed to download the voice message.';
+        }
+        return 'Failed to process the voice message. Please try again later.';
     }
 };
