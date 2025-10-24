@@ -1,5 +1,6 @@
 const { Events, EmbedBuilder } = require('discord.js');
 const { LOG_CHANNEL_ID, COLORS } = require('../config/logging');
+const sttHandler = require('../commands/system/stt-handler');
 
 module.exports = {
     name: Events.MessageCreate,
@@ -35,16 +36,11 @@ module.exports = {
                     size: voiceAttachment.size,
                     url: voiceAttachment.url
                 });
-                
-                const sttCommand = client.slashCommands.get('stt-handler');
-                if (sttCommand && sttCommand.handleVoiceMessage) {
-                    try {
-                        await sttCommand.handleVoiceMessage(message);
-                    } catch (error) {
-                        console.error('Error processing voice message:', error);
-                    }
-                } else {
-                    console.log('❌ STT handler not found');
+
+                try {
+                    await sttHandler.handleVoiceMessage(message);
+                } catch (error) {
+                    console.error('Error processing voice message:', error);
                 }
                 return;
             }
