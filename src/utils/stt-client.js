@@ -6,7 +6,7 @@ const msgpack = require('msgpack-lite');
 const { v4: uuidv4 } = require('uuid');
 
 // Magic bytes for the Scripty protocol (must match scripty_common::MAGIC_BYTES)
-const MAGIC_BYTES = Buffer.from([0x73, 0x63, 0x72, 0x69]); // "scri"
+const MAGIC_BYTES = Buffer.from([12, 219, 166, 236]); // Actual Scripty magic bytes
 
 class ScriptySTTClient {
     constructor(host = '127.0.0.1', port = 7269) {
@@ -216,16 +216,27 @@ class ScriptySTTClient {
 
             // Step 5: Wait for result
             console.log('Waiting for result...');
-            while (true) {
+            let attempts = 0;
+            const maxAttempts = 100; // ~50 seconds timeout
+
+            while (attempts < maxAttempts) {
                 const response = await this.readMessage();
+                attempts++;
 
                 if (response.SttResult) {
                     console.log('Transcription received');
                     return response.SttResult.result;
+                } else if (response.StatusConnectionData) {
+                    // Status update, just continue waiting
+                    if (attempts % 10 === 0) {
+                        console.log(`Still waiting for transcription... (${attempts}/${maxAttempts})`);
+                    }
                 } else {
                     console.log('Received non-result message:', response);
                 }
             }
+
+            throw new Error('Transcription timeout - no result received after ' + maxAttempts + ' attempts');
 
         } catch (error) {
             console.error('Transcription error:', error);
