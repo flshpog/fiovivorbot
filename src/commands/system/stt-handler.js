@@ -14,6 +14,7 @@ module.exports = {
 
     async handleVoiceMessage(message) {
         let processingMsg;
+        let tempFile;
 
         try {
             // Send initial processing message
@@ -39,21 +40,17 @@ module.exports = {
 
             console.log(`✅ Downloaded ${audioBuffer.length} bytes`);
 
-            // Save to temporary file
-            const tempFile = path.join(os.tmpdir(), `discord-voice-${Date.now()}.ogg`);
+            // Save to temporary file with .ogg extension
+            tempFile = path.join(os.tmpdir(), `discord-voice-${Date.now()}.ogg`);
             fs.writeFileSync(tempFile, audioBuffer);
 
             console.log('🔊 Transcribing audio...');
 
-            // Transcribe using Whisper
+            // Create a read stream and transcribe
             const transcription = await openai.audio.transcriptions.create({
                 file: fs.createReadStream(tempFile),
                 model: 'whisper-1',
-                language: 'en',
             });
-
-            // Clean up temp file
-            fs.unlinkSync(tempFile);
 
             console.log('✅ Transcription complete');
 
@@ -74,6 +71,18 @@ module.exports = {
                 await processingMsg.edit(`❌ ${errorMsg}`);
             } else {
                 await message.reply(`❌ ${errorMsg}`);
+            }
+        } finally {
+            // Always clean up temp file
+            if (tempFile) {
+                try {
+                    if (fs.existsSync(tempFile)) {
+                        fs.unlinkSync(tempFile);
+                        console.log('🗑️ Cleaned up temp file');
+                    }
+                } catch (cleanupError) {
+                    console.error('Error cleaning up temp file:', cleanupError);
+                }
             }
         }
     },
