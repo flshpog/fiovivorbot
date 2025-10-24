@@ -1,6 +1,5 @@
 const { Events, EmbedBuilder } = require('discord.js');
 const { LOG_CHANNEL_ID, COLORS } = require('../config/logging');
-const sttHandler = require('../commands/system/stt-handler');
 
 module.exports = {
     name: Events.MessageCreate,
@@ -10,41 +9,6 @@ module.exports = {
 
         const client = message.client;
         const prefix = client.config.prefix;
-
-        // Debug logging for attachments
-        if (message.attachments.size > 0) {
-            console.log('Message has attachments:');
-            message.attachments.forEach(att => {
-                console.log(`- ${att.filename}: ${att.contentType}, flags: ${att.flags}`);
-            });
-        }
-
-        // Check for voice messages (STT feature)
-        if (message.attachments.size > 0) {
-            const voiceAttachment = message.attachments.find(att => 
-                att.contentType === 'audio/ogg' || 
-                att.contentType === 'audio/ogg; codecs=opus' ||
-                att.filename?.endsWith('.ogg') ||
-                (att.flags && att.flags & 4) // Voice message flag
-            );
-            
-            if (voiceAttachment) {
-                console.log('🎤 VOICE MESSAGE DETECTED! Processing...');
-                console.log('Voice attachment details:', {
-                    filename: voiceAttachment.filename,
-                    contentType: voiceAttachment.contentType,
-                    size: voiceAttachment.size,
-                    url: voiceAttachment.url
-                });
-
-                try {
-                    await sttHandler.handleVoiceMessage(message);
-                } catch (error) {
-                    console.error('Error processing voice message:', error);
-                }
-                return;
-            }
-        }
 
         // Handle prefix commands
         if (!message.content.startsWith(prefix)) {
