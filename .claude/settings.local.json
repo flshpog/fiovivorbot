@@ -3,7 +3,8 @@
     "allow": [
       "Read(//c/Users/cash/Downloads/**)",
       "Bash(npm install)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
