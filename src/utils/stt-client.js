@@ -3,7 +3,7 @@
 
 const net = require('net');
 const msgpack = require('msgpack-lite');
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4, parse: uuidParse } = require('uuid');
 
 // Magic bytes for the Scripty protocol (must match scripty_common::MAGIC_BYTES)
 const MAGIC_BYTES = Buffer.from([12, 219, 166, 236]); // Actual Scripty magic bytes
@@ -146,13 +146,15 @@ class ScriptySTTClient {
      */
     async transcribe(audioData, sampleRate = 48000, channels = 2, language = 'en', denoise = true) {
         const streamId = uuidv4();
+        // Convert UUID string to byte array (server expects 16-byte array, not string)
+        const streamIdBytes = Array.from(uuidParse(streamId));
 
         try {
             // Step 1: Initialize streaming
             console.log('Initializing stream...');
             this.writeMessage({
                 InitializeStreaming: {
-                    id: streamId
+                    id: streamIdBytes
                 }
             });
 
@@ -167,7 +169,7 @@ class ScriptySTTClient {
             console.log('Sending audio details...');
             this.writeMessage({
                 AudioDataDetails: {
-                    id: streamId,
+                    id: streamIdBytes,
                     denoise_audio: denoise,
                     sample_rate: sampleRate,
                     channels: channels
@@ -195,7 +197,7 @@ class ScriptySTTClient {
                         data: {
                             Integer: chunk
                         },
-                        id: streamId
+                        id: streamIdBytes
                     }
                 });
             }
@@ -209,7 +211,7 @@ class ScriptySTTClient {
                     translate: false,
                     verbose: false,
                     language: language,
-                    id: streamId,
+                    id: streamIdBytes,
                     priority: 'High'
                 }
             });
