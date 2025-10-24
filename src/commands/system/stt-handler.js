@@ -61,10 +61,11 @@ module.exports = {
 
     async transcribeAudio(audioBuffer, filename) {
         try {
-            // Create a File-like object from the buffer
-            const audioFile = new File([audioBuffer], filename || 'voice-message.ogg', {
-                type: 'audio/ogg'
-            });
+            // Create a Blob from the buffer (Node.js 18+ has native Blob support)
+            const audioBlob = new Blob([audioBuffer], { type: 'audio/ogg' });
+
+            // Convert to File using OpenAI's toFile helper
+            const audioFile = await client.toFile(audioBlob, filename || 'voice-message.ogg');
 
             // Use OpenAI Whisper to transcribe
             const transcription = await client.audio.transcriptions.create({
@@ -78,7 +79,7 @@ module.exports = {
 
         } catch (error) {
             console.error('Error transcribing audio with Whisper:', error);
-            
+
             // Handle specific OpenAI errors
             if (error.status === 401) {
                 throw new Error('Invalid OpenAI API key');
@@ -87,7 +88,7 @@ module.exports = {
             } else if (error.status === 413) {
                 throw new Error('Audio file too large (max 25MB)');
             }
-            
+
             throw new Error('Failed to transcribe audio');
         }
     }
