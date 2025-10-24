@@ -219,7 +219,7 @@ class ScriptySTTClient {
             // Step 5: Wait for result
             console.log('Waiting for result...');
             let attempts = 0;
-            const maxAttempts = 100; // ~50 seconds timeout
+            const maxAttempts = 500; // ~250 seconds timeout (service can be slow on CPU)
 
             while (attempts < maxAttempts) {
                 const response = await this.readMessage();
