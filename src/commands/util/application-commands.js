@@ -78,7 +78,7 @@ Now we've got a handful of smaller questions, you don't have to write too much f
 …and that's it for all the questions! There are two more things you need to do to complete the interview.
 > \`!acknowledgements\` –> Read over a few quick things. Make sure you know what you're getting yourself into!
 > \`!dnc-list\` –> Have anyone that you refuse to play with/would rather not play with? Let us know!`,
-        message2: `https://64.media.tumblr.com/8d29ce82b0b7bc1bca36eac57ae5bc29/fb2b2434dedcb140-8e/s540x810/b551b8c1117a1589e3b64a65b3c52141a4abddee.gif`
+        message2: `https://gifdb.com/images/high/i-ll-be-back-498-x-280-gif-4ov56rwcyk2idaru.gif`
     },
 
     'acknowledgements': {
