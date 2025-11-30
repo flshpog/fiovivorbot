@@ -7,6 +7,26 @@ module.exports = {
         // Ignore partial messages or bot messages
         if (message.partial || message.author?.bot) return;
 
+        // Store message for snipe command
+        try {
+            const client = message.client;
+            if (!client.snipedMessages) {
+                const { Collection } = require('discord.js');
+                client.snipedMessages = new Collection();
+            }
+
+            client.snipedMessages.set(message.channel.id, {
+                content: message.content,
+                authorTag: message.author.tag,
+                authorAvatar: message.author.displayAvatarURL(),
+                channelName: message.channel.name,
+                deletedAt: new Date(),
+                attachments: message.attachments.map(att => att.url)
+            });
+        } catch (snipeError) {
+            console.error('Error storing sniped message:', snipeError);
+        }
+
         try {
             const logChannel = message.guild.channels.cache.get(LOG_CHANNEL_ID);
             if (!logChannel) return;

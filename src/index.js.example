@@ -9,7 +9,8 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildVoiceStates
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildMessageReactions
     ],
     partials: [Partials.Message, Partials.Channel, Partials.Reaction]
 });
@@ -54,6 +55,22 @@ try {
     console.log('No stopwatch data found, starting fresh');
     fs.writeFileSync('./data/stopwatches.json', '{}');
 }
+
+// Load reaction roles data
+client.reactionRoles = new Collection();
+try {
+    const reactionRolesData = fs.readFileSync('./data/reactionRoles.json', 'utf8');
+    const reactionRoles = JSON.parse(reactionRolesData);
+    for (const [name, data] of Object.entries(reactionRoles)) {
+        client.reactionRoles.set(name, data);
+    }
+} catch (error) {
+    console.log('No reaction roles data found, starting fresh');
+    fs.writeFileSync('./data/reactionRoles.json', '{}');
+}
+
+// Initialize sniped messages collection
+client.snipedMessages = new Collection();
 
 // Load commands
 const commandFolders = ['org', 'util', 'mod', 'system', 'custom'];
