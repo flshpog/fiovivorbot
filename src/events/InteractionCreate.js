@@ -80,5 +80,25 @@ module.exports = {
                 }
             }
         }
+
+        // Handle modal submissions
+        else if (interaction.isModalSubmit()) {
+            if (interaction.customId === 'addCustomCommandModal') {
+                const command = interaction.client.slashCommands.get('addcustomcommand');
+                if (command && command.handleModalSubmit) {
+                    try {
+                        await command.handleModalSubmit(interaction);
+                    } catch (error) {
+                        console.error('Error handling modal submit:', error);
+                        if (!interaction.replied && !interaction.deferred) {
+                            await interaction.reply({
+                                content: 'There was an error processing your submission.',
+                                ephemeral: true
+                            });
+                        }
+                    }
+                }
+            }
+        }
     },
 };

@@ -1,24 +1,48 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
 const fs = require('fs');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('addcustomcommand')
         .setDescription('Add a custom command')
-        .addStringOption(option =>
-            option.setName('name')
-                .setDescription('The name of the custom command')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('response')
-                .setDescription('The response for the custom command')
-                .setRequired(true))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
 
     async execute(interaction) {
+        // Create the modal
+        const modal = new ModalBuilder()
+            .setCustomId('addCustomCommandModal')
+            .setTitle('Add Custom Command');
+
+        // Create text inputs
+        const nameInput = new TextInputBuilder()
+            .setCustomId('commandName')
+            .setLabel('Command Name')
+            .setPlaceholder('Enter the command name (e.g., hello)')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true);
+
+        const responseInput = new TextInputBuilder()
+            .setCustomId('commandResponse')
+            .setLabel('Command Response')
+            .setPlaceholder('Enter what the command should say')
+            .setStyle(TextInputStyle.Paragraph)
+            .setRequired(true);
+
+        // Add inputs to action rows
+        const nameRow = new ActionRowBuilder().addComponents(nameInput);
+        const responseRow = new ActionRowBuilder().addComponents(responseInput);
+
+        // Add rows to the modal
+        modal.addComponents(nameRow, responseRow);
+
+        // Show the modal
+        await interaction.showModal(modal);
+    },
+
+    async handleModalSubmit(interaction) {
         try {
-            const name = interaction.options.getString('name').toLowerCase();
-            const response = interaction.options.getString('response');
+            const name = interaction.fields.getTextInputValue('commandName').toLowerCase();
+            const response = interaction.fields.getTextInputValue('commandResponse');
 
             // Check if command name contains invalid characters
             if (!/^[a-z0-9_-]+$/i.test(name)) {
@@ -70,11 +94,15 @@ module.exports = {
             }
 
         } catch (error) {
-            console.error('Error in addcustomcommand:', error);
-            await interaction.reply({
-                content: 'There was an error adding the custom command.',
-                ephemeral: true
-            });
+            console.error('Error in addcustomcommand modal submit:', error);
+
+            // Check if we haven't replied yet
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply({
+                    content: 'There was an error adding the custom command.',
+                    ephemeral: true
+                });
+            }
         }
     },
 };

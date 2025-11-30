@@ -1,4 +1,5 @@
-const { Events } = require('discord.js');
+const { Events, EmbedBuilder } = require('discord.js');
+const { LOG_CHANNEL_ID, COLORS } = require('../config/logging');
 
 // CONFIG - Update these IDs for your server
 const CONFIG = {
@@ -33,6 +34,33 @@ module.exports = {
                 await joinLogChannel.send(welcomeMessage);
             } else {
                 console.error('Join log channel not found. Please update JOIN_LOG_CHANNEL_ID in guildMemberAdd.js');
+            }
+
+            // Log member join to logging channel
+            try {
+                const logChannel = member.guild.channels.cache.get(LOG_CHANNEL_ID);
+                if (logChannel) {
+                    const accountAge = Date.now() - member.user.createdTimestamp;
+                    const accountAgeDays = Math.floor(accountAge / (1000 * 60 * 60 * 24));
+
+                    const embed = new EmbedBuilder()
+                        .setColor(COLORS.MEMBER_JOIN)
+                        .setTitle('📥 Member Joined')
+                        .setDescription(`**${member.user.tag} joined the server**`)
+                        .addFields(
+                            { name: 'User', value: `${member.user.tag}`, inline: true },
+                            { name: 'User ID', value: member.user.id, inline: true },
+                            { name: 'Member Count', value: `${memberCount}`, inline: true },
+                            { name: 'Account Created', value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`, inline: true },
+                            { name: 'Account Age', value: `${accountAgeDays} days`, inline: true }
+                        )
+                        .setThumbnail(member.user.displayAvatarURL())
+                        .setTimestamp();
+
+                    await logChannel.send({ embeds: [embed] });
+                }
+            } catch (logError) {
+                console.error('Error logging member join:', logError);
             }
 
             // Handle autorole
