@@ -75,7 +75,8 @@ When you are ready to move on, continue the interview via \`!app-4\`.
     },
 
     'app-4': {
-        message1: `Now we've got a handful of smaller questions, you don't have to write too much for these.
+        message1: `# QUESTION 4
+Now we've got a handful of smaller questions, you don't have to write too much for these.
 
 *4a –> Who is the kind of person that you gravitate towards in Survivor; the kind of ally you want to have?*
 
@@ -83,12 +84,10 @@ When you are ready to move on, continue the interview via \`!app-4\`.
 
 *4c –> If you had to predict your vote-out or elimination right here, how would you be biting the dust?*
 
-*4d –> Which Pokemon (or character within the franchise) do you plan on playing like this season? Why?*
+*4d –> Tell us about your relationship with the partner you are applying with. How will you guys cook together? How will you shine solo if they’re eliminated early?*
 
-…and that's it for all the questions! There are two more things you need to do to complete the interview.
-> \`!acknowledgements\` –> Read over a few quick things. Make sure you know what you're getting yourself into!
-> \`!dnc-list\` –> Have anyone that you refuse to play with/would rather not play with? Let us know!`,
-        message2: `https://64.media.tumblr.com/8d29ce82b0b7bc1bca36eac57ae5bc29/fb2b2434dedcb140-8e/s540x810/b551b8c1117a1589e3b64a65b3c52141a4abddee.gif`
+When you are done with your final set of questions, please enter the command \`!acknowledgements\` and read over a few quick things. Make sure you know what you're getting yourself into!`,
+        message2: `https://gifdb.com/images/high/i-ll-be-back-498-x-280-gif-4ov56rwcyk2idaru.gif`
     },
 
     'acknowledgements': {
