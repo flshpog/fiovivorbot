@@ -28,7 +28,7 @@ module.exports = {
                 .setTitle('🎫 Create a Ticket')
                 .setDescription('Click the button below if you wish to apply for Fiovivor!')
                 .setColor(0x5865F2)
-                .setFooter({ text: '' })
+                .setFooter({ text: 'Fiovivor Applications' })
                 .setTimestamp();
 
             const button = new ButtonBuilder()
