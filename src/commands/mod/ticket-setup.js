@@ -64,7 +64,7 @@ module.exports = {
             
             if (!category) {
                 return await interaction.reply({
-                    content: 'Tickets category not found. Please contact an administrator.',
+                    content: 'Tickets category not found. Please contact <@932329766063837246>.',
                     ephemeral: true
                 });
             }
