@@ -20,6 +20,9 @@ module.exports = {
             // Delete the ping message
             await pingMessage.delete();
 
+            // Reply with the cryptic message
+            await message.reply(`Diane's manuscripts are notoriously personal. You've been granted temporary viewing access to her private drafts. Read carefully.\n\nhttps://discord.com/channels/${thread.guildId}/${THREAD_ID}\n\nThe answer lies in the second attempt, third thought, twelfth word spoken.`);
+
             console.log(`Added ${message.author.tag} to Diane's Drafts thread`);
         } catch (error) {
             console.error('Error in dianesdrafts command:', error);
