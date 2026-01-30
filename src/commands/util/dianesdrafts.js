@@ -5,7 +5,7 @@ module.exports = {
 
     async execute(message, args) {
         const THREAD_ID = '1466848001816531027';
-
+// comment for fun
         try {
             const thread = await message.client.channels.fetch(THREAD_ID);
 
