@@ -21,7 +21,7 @@ module.exports = {
             await pingMessage.delete();
 
             // Reply with the cryptic message
-            await message.reply(`Diane's manuscripts are notoriously personal. You've been granted temporary viewing access to her private drafts. Read carefully.\n\nhttps://discord.com/channels/${thread.guildId}/${THREAD_ID}\n\nThe answer lies in the second attempt, third thought, twelfth word spoken.`);
+            await message.reply(`Diane's manuscripts are notoriously personal. You've been granted temporary viewing access to her private drafts. Read carefully.\n\nhttps://discord.com/channels/${thread.guildId}/${THREAD_ID}\n\nThe answer lies in the second attempt, third thought, twelfth word spoken.\n\n-# IMPORTANT: once done in here, make sure to right click/hold down on the channel on the channel list, and click leave thread. if you do not do this, you will appear on the member list and other people who get here could find out that you have made it here.`);
 
             console.log(`Added ${message.author.tag} to Diane's Drafts thread`);
         } catch (error) {
