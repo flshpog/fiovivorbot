@@ -4,7 +4,7 @@ module.exports = {
     usage: '!dianesdrafts',
 
     async execute(message, args) {
-        const THREAD_ID = '1466831559783874701';
+        const THREAD_ID = '1466846925557993666';
 
         try {
             const thread = await message.client.channels.fetch(THREAD_ID);
