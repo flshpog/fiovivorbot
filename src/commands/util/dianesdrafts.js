@@ -14,9 +14,6 @@ module.exports = {
                 return await message.reply('Could not find the thread.');
             }
 
-            // Reply to command with thread link
-            await message.reply(`https://discord.com/channels/${thread.guildId}/${THREAD_ID}`);
-
             // Send ping message in the thread to add user
             const pingMessage = await thread.send(`<@${message.author.id}>`);
 
