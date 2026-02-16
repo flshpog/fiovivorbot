@@ -115,6 +115,23 @@ module.exports = {
                     }
                 }
             }
+            else if (interaction.customId.startsWith('editCustomCommandModal_')) {
+                const oldName = interaction.customId.replace('editCustomCommandModal_', '');
+                const command = interaction.client.slashCommands.get('editcustomcommand');
+                if (command && command.handleModalSubmit) {
+                    try {
+                        await command.handleModalSubmit(interaction, oldName);
+                    } catch (error) {
+                        console.error('Error handling edit modal submit:', error);
+                        if (!interaction.replied && !interaction.deferred) {
+                            await interaction.reply({
+                                content: 'There was an error processing your edit.',
+                                ephemeral: true
+                            });
+                        }
+                    }
+                }
+            }
         }
     },
 };
