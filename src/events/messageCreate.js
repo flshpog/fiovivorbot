@@ -11,27 +11,43 @@ module.exports = {
         if (message.author.bot) return;
 
         // Voice message transcription
+        console.log(`[DEBUG] Message received | flags: ${message.flags.bitfield} | attachments: ${message.attachments.size} | isVoice: ${message.flags.has(VOICE_MESSAGE_FLAG)}`);
+
         if (message.flags.has(VOICE_MESSAGE_FLAG)) {
+            console.log('[DEBUG] Voice message detected');
+
             const apiKey = process.env.OPENAI_API_KEY;
-            if (!apiKey) return;
+            if (!apiKey) {
+                console.log('[DEBUG] No OPENAI_API_KEY set, skipping');
+                return;
+            }
 
             const attachment = message.attachments.first();
-            if (!attachment) return;
+            if (!attachment) {
+                console.log('[DEBUG] No attachment found');
+                return;
+            }
+
+            console.log(`[DEBUG] Attachment URL: ${attachment.proxyURL}`);
 
             try {
                 const OpenAI = require('openai');
+                console.log('[DEBUG] OpenAI loaded');
 
                 // Download the audio
                 const response = await fetch(attachment.proxyURL);
                 const buffer = Buffer.from(await response.arrayBuffer());
+                console.log(`[DEBUG] Audio downloaded, size: ${buffer.length} bytes`);
 
                 // Send to Whisper API
                 const openai = new OpenAI({ apiKey });
                 const file = await OpenAI.toFile(buffer, 'voice.ogg');
+                console.log('[DEBUG] Sending to Whisper API...');
                 const transcription = await openai.audio.transcriptions.create({
                     model: 'whisper-1',
                     file,
                 });
+                console.log(`[DEBUG] Transcription result: ${JSON.stringify(transcription)}`);
 
                 const text = transcription.text?.trim();
                 if (text) {
@@ -41,7 +57,7 @@ module.exports = {
                     });
                 }
             } catch (error) {
-                console.error('Error transcribing voice message:', error);
+                console.error('[DEBUG] Error transcribing voice message:', error);
             }
             return;
         }
