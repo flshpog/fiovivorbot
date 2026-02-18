@@ -1,11 +1,46 @@
-const { Events, EmbedBuilder } = require('discord.js');
+const { Events, EmbedBuilder, MessageFlags } = require('discord.js');
 const { LOG_CHANNEL_ID, COLORS } = require('../config/logging');
+const OpenAI = require('openai');
+const { toFile } = require('openai');
 
 module.exports = {
     name: Events.MessageCreate,
     async execute(message) {
         // Ignore bot messages
         if (message.author.bot) return;
+
+        // Voice message transcription
+        if (message.flags.has(MessageFlags.IsVoiceMessage)) {
+            const apiKey = process.env.OPENAI_API_KEY;
+            if (!apiKey) return;
+
+            const attachment = message.attachments.first();
+            if (!attachment) return;
+
+            try {
+                // Download the audio
+                const response = await fetch(attachment.proxyURL);
+                const buffer = Buffer.from(await response.arrayBuffer());
+
+                // Send to Whisper API
+                const openai = new OpenAI({ apiKey });
+                const transcription = await openai.audio.transcriptions.create({
+                    model: 'whisper-1',
+                    file: await toFile(buffer, 'voice.ogg'),
+                });
+
+                const text = transcription.text?.trim();
+                if (text) {
+                    await message.reply({
+                        content: `**Transcription:** ${text}`,
+                        allowedMentions: { repliedUser: false },
+                    });
+                }
+            } catch (error) {
+                console.error('Error transcribing voice message:', error);
+            }
+            return;
+        }
 
         const client = message.client;
         const prefix = client.config.prefix;
