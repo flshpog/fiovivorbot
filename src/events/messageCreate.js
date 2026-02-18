@@ -1,7 +1,8 @@
-const { Events, EmbedBuilder, MessageFlags } = require('discord.js');
+const { Events, EmbedBuilder } = require('discord.js');
 const { LOG_CHANNEL_ID, COLORS } = require('../config/logging');
-const OpenAI = require('openai');
-const { toFile } = require('openai');
+
+// Voice message flag (1 << 13)
+const VOICE_MESSAGE_FLAG = 1 << 13;
 
 module.exports = {
     name: Events.MessageCreate,
@@ -10,7 +11,7 @@ module.exports = {
         if (message.author.bot) return;
 
         // Voice message transcription
-        if (message.flags.has(MessageFlags.IsVoiceMessage)) {
+        if (message.flags.has(VOICE_MESSAGE_FLAG)) {
             const apiKey = process.env.OPENAI_API_KEY;
             if (!apiKey) return;
 
@@ -18,15 +19,18 @@ module.exports = {
             if (!attachment) return;
 
             try {
+                const OpenAI = require('openai');
+
                 // Download the audio
                 const response = await fetch(attachment.proxyURL);
                 const buffer = Buffer.from(await response.arrayBuffer());
 
                 // Send to Whisper API
                 const openai = new OpenAI({ apiKey });
+                const file = await OpenAI.toFile(buffer, 'voice.ogg');
                 const transcription = await openai.audio.transcriptions.create({
                     model: 'whisper-1',
-                    file: await toFile(buffer, 'voice.ogg'),
+                    file,
                 });
 
                 const text = transcription.text?.trim();
