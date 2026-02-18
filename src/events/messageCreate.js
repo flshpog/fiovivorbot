@@ -1,8 +1,23 @@
 const { Events, EmbedBuilder } = require('discord.js');
 const { LOG_CHANNEL_ID, COLORS } = require('../config/logging');
+const https = require('https');
 
 // Voice message flag (1 << 13)
 const VOICE_MESSAGE_FLAG = 1 << 13;
+
+function downloadBuffer(url) {
+    return new Promise((resolve, reject) => {
+        https.get(url, (res) => {
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                return downloadBuffer(res.headers.location).then(resolve).catch(reject);
+            }
+            const chunks = [];
+            res.on('data', (chunk) => chunks.push(chunk));
+            res.on('end', () => resolve(Buffer.concat(chunks)));
+            res.on('error', reject);
+        }).on('error', reject);
+    });
+}
 
 module.exports = {
     name: Events.MessageCreate,
@@ -11,43 +26,36 @@ module.exports = {
         if (message.author.bot) return;
 
         // Voice message transcription
-        console.log(`[DEBUG] Message received | flags: ${message.flags.bitfield} | attachments: ${message.attachments.size} | isVoice: ${message.flags.has(VOICE_MESSAGE_FLAG)}`);
-
         if (message.flags.has(VOICE_MESSAGE_FLAG)) {
-            console.log('[DEBUG] Voice message detected');
+            console.log('[TRANSCRIBE] Voice message detected');
 
             const apiKey = process.env.OPENAI_API_KEY;
             if (!apiKey) {
-                console.log('[DEBUG] No OPENAI_API_KEY set, skipping');
+                console.log('[TRANSCRIBE] No OPENAI_API_KEY set, skipping');
                 return;
             }
 
             const attachment = message.attachments.first();
-            if (!attachment) {
-                console.log('[DEBUG] No attachment found');
-                return;
-            }
-
-            console.log(`[DEBUG] Attachment URL: ${attachment.proxyURL}`);
+            if (!attachment) return;
 
             try {
                 const OpenAI = require('openai');
-                console.log('[DEBUG] OpenAI loaded');
 
                 // Download the audio
-                const response = await fetch(attachment.proxyURL);
-                const buffer = Buffer.from(await response.arrayBuffer());
-                console.log(`[DEBUG] Audio downloaded, size: ${buffer.length} bytes`);
+                const url = attachment.proxyURL || attachment.url;
+                console.log(`[TRANSCRIBE] Downloading from: ${url}`);
+                const buffer = await downloadBuffer(url);
+                console.log(`[TRANSCRIBE] Downloaded ${buffer.length} bytes`);
 
                 // Send to Whisper API
                 const openai = new OpenAI({ apiKey });
                 const file = await OpenAI.toFile(buffer, 'voice.ogg');
-                console.log('[DEBUG] Sending to Whisper API...');
+                console.log('[TRANSCRIBE] Sending to Whisper...');
                 const transcription = await openai.audio.transcriptions.create({
                     model: 'whisper-1',
                     file,
                 });
-                console.log(`[DEBUG] Transcription result: ${JSON.stringify(transcription)}`);
+                console.log(`[TRANSCRIBE] Result: ${transcription.text}`);
 
                 const text = transcription.text?.trim();
                 if (text) {
@@ -57,7 +65,7 @@ module.exports = {
                     });
                 }
             } catch (error) {
-                console.error('[DEBUG] Error transcribing voice message:', error);
+                console.error('[TRANSCRIBE] Error:', error.message || error);
             }
             return;
         }
