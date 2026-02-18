@@ -27,13 +27,8 @@ module.exports = {
 
         // Voice message transcription
         if (message.flags.has(VOICE_MESSAGE_FLAG)) {
-            console.log('[TRANSCRIBE] Voice message detected');
-
             const apiKey = process.env.GROQ_API_KEY;
-            if (!apiKey) {
-                console.log('[TRANSCRIBE] No GROQ_API_KEY set, skipping');
-                return;
-            }
+            if (!apiKey) return;
 
             const attachment = message.attachments.first();
             if (!attachment) return;
@@ -41,34 +36,28 @@ module.exports = {
             try {
                 const OpenAI = require('openai');
 
-                // Download the audio
                 const url = attachment.proxyURL || attachment.url;
-                console.log(`[TRANSCRIBE] Downloading from: ${url}`);
                 const buffer = await downloadBuffer(url);
-                console.log(`[TRANSCRIBE] Downloaded ${buffer.length} bytes`);
 
-                // Send to Groq Whisper API
                 const groq = new OpenAI({
                     apiKey,
                     baseURL: 'https://api.groq.com/openai/v1',
                 });
                 const file = await OpenAI.toFile(buffer, 'voice.ogg');
-                console.log('[TRANSCRIBE] Sending to Groq Whisper...');
                 const transcription = await groq.audio.transcriptions.create({
                     model: 'whisper-large-v3',
                     file,
                 });
-                console.log(`[TRANSCRIBE] Result: ${transcription.text}`);
 
                 const text = transcription.text?.trim();
                 if (text) {
                     await message.reply({
-                        content: `**Transcription:** ${text}`,
+                        content: `\`\`\`${text}\`\`\``,
                         allowedMentions: { repliedUser: false },
                     });
                 }
             } catch (error) {
-                console.error('[TRANSCRIBE] Error:', error.message || error);
+                console.error('Error transcribing voice message:', error.message || error);
             }
             return;
         }
