@@ -29,9 +29,9 @@ module.exports = {
         if (message.flags.has(VOICE_MESSAGE_FLAG)) {
             console.log('[TRANSCRIBE] Voice message detected');
 
-            const apiKey = process.env.OPENAI_API_KEY;
+            const apiKey = process.env.GROQ_API_KEY;
             if (!apiKey) {
-                console.log('[TRANSCRIBE] No OPENAI_API_KEY set, skipping');
+                console.log('[TRANSCRIBE] No GROQ_API_KEY set, skipping');
                 return;
             }
 
@@ -47,12 +47,15 @@ module.exports = {
                 const buffer = await downloadBuffer(url);
                 console.log(`[TRANSCRIBE] Downloaded ${buffer.length} bytes`);
 
-                // Send to Whisper API
-                const openai = new OpenAI({ apiKey });
+                // Send to Groq Whisper API
+                const groq = new OpenAI({
+                    apiKey,
+                    baseURL: 'https://api.groq.com/openai/v1',
+                });
                 const file = await OpenAI.toFile(buffer, 'voice.ogg');
-                console.log('[TRANSCRIBE] Sending to Whisper...');
-                const transcription = await openai.audio.transcriptions.create({
-                    model: 'whisper-1',
+                console.log('[TRANSCRIBE] Sending to Groq Whisper...');
+                const transcription = await groq.audio.transcriptions.create({
+                    model: 'whisper-large-v3',
                     file,
                 });
                 console.log(`[TRANSCRIBE] Result: ${transcription.text}`);
