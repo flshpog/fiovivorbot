@@ -54,6 +54,11 @@ module.exports = {
 
             if (embed) {
                 await logChannel.send({ embeds: [embed] });
+
+                const vcLogChannel = newState.guild.channels.cache.get('1479972732530721019');
+                if (vcLogChannel) {
+                    await vcLogChannel.send({ embeds: [embed] });
+                }
             }
         } catch (error) {
             console.error('Error logging voice state update:', error);
