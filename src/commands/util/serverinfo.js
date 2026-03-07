@@ -23,7 +23,6 @@ module.exports = {
 
             const textChannels = guild.channels.cache.filter(c => c.type === ChannelType.GuildText).size;
             const voiceChannels = guild.channels.cache.filter(c => c.type === ChannelType.GuildVoice).size;
-            const categories = guild.channels.cache.filter(c => c.type === ChannelType.GuildCategory).size;
             const totalChannels = guild.channels.cache.size;
 
             const embed = new EmbedBuilder()
@@ -34,7 +33,7 @@ module.exports = {
                     { name: 'Owner', value: `${owner.user.tag}`, inline: true },
                     { name: 'Members', value: `${guild.memberCount}`, inline: true },
                     { name: 'Roles', value: `${guild.roles.cache.size}`, inline: true },
-                    { name: 'Channels', value: `${totalChannels} total (${textChannels} text, ${voiceChannels} voice, ${categories} categories)`, inline: false },
+                    { name: 'Channels', value: `${totalChannels} total (${textChannels} text, ${voiceChannels} voice)`, inline: false },
                     { name: 'Created', value: `<t:${createdTimestamp}:F> (<t:${createdTimestamp}:R>)`, inline: false },
                     { name: 'Server ID', value: guild.id, inline: false },
                 );
