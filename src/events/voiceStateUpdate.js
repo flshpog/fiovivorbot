@@ -1,17 +1,26 @@
 const { Events, EmbedBuilder } = require('discord.js');
 const { LOG_CHANNEL_ID, COLORS } = require('../config/logging');
 
+const TRACKED_VC_ID = '1479956214342225991';
+const VC_LOG_CHANNEL_ID = '1479972732530721019';
+
 module.exports = {
     name: Events.VoiceStateUpdate,
     async execute(oldState, newState) {
         try {
+            const oldChannelId = oldState.channel?.id;
+            const newChannelId = newState.channel?.id;
+
+            // Only log events involving the tracked VC
+            if (oldChannelId !== TRACKED_VC_ID && newChannelId !== TRACKED_VC_ID) return;
+
             const logChannel = newState.guild.channels.cache.get(LOG_CHANNEL_ID);
             if (!logChannel) return;
 
             const member = newState.member;
             let embed;
 
-            // User joined a voice channel
+            // User joined the tracked VC
             if (!oldState.channel && newState.channel) {
                 embed = new EmbedBuilder()
                     .setColor(COLORS.VOICE_JOIN)

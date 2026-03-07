@@ -111,14 +111,6 @@ module.exports = {
                 });
             });
 
-            // Add spectator roles based on type
-            // Role 1414012718293323776: Can view both 1-1s and alliances (no speaking)
-            permissionOverwrites.push({
-                id: '1414012718293323776',
-                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
-                deny: [PermissionFlagsBits.SendMessages]
-            });
-
             // Role 1414011212718538833: Can view alliances only, NOT 1-1s (no speaking)
             if (type === 'alliance') {
                 permissionOverwrites.push({
@@ -127,7 +119,6 @@ module.exports = {
                     deny: [PermissionFlagsBits.SendMessages]
                 });
             } else {
-                // For 1-1s, explicitly deny this role
                 permissionOverwrites.push({
                     id: '1414011212718538833',
                     deny: [PermissionFlagsBits.ViewChannel]
