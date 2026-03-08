@@ -25,7 +25,15 @@ module.exports = {
                 { body: commands },
             );
 
-            console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+            console.log(`Successfully reloaded ${data.length} guild application (/) commands.`);
+
+            // Also register globally for the Supports Commands badge
+            await rest.put(
+                Routes.applicationCommands(client.user.id),
+                { body: commands },
+            );
+
+            console.log('Successfully registered global application (/) commands.');
         } catch (error) {
             console.error('Error registering slash commands:', error);
         }
