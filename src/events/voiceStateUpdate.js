@@ -63,11 +63,43 @@ module.exports = {
 
             if (embed) {
                 await logChannel.send({ embeds: [embed] });
+            }
 
-                if (member.roles.cache.has('1414008636451197038')) {
-                    const vcLogChannel = newState.guild.channels.cache.get(VC_LOG_CHANNEL_ID);
-                    if (vcLogChannel) {
-                        await vcLogChannel.send({ embeds: [embed] });
+            // Second VC log channel: only track joins/leaves for the tracked VC specifically
+            if (member.roles.cache.has('1414008636451197038')) {
+                const vcLogChannel = newState.guild.channels.cache.get(VC_LOG_CHANNEL_ID);
+                if (vcLogChannel) {
+                    let vcEmbed;
+
+                    // Joined the tracked VC (from nothing or from another VC)
+                    if (newChannelId === TRACKED_VC_ID && oldChannelId !== TRACKED_VC_ID) {
+                        vcEmbed = new EmbedBuilder()
+                            .setColor(COLORS.VOICE_JOIN)
+                            .setTitle('\uD83D\uDD0A Voice Channel Joined')
+                            .setDescription(`**${member.user.tag} joined a voice channel**`)
+                            .addFields(
+                                { name: 'User', value: `${member.user.tag} (${member.user.id})`, inline: true },
+                                { name: 'Channel', value: `${newState.channel.name}`, inline: true }
+                            )
+                            .setThumbnail(member.user.displayAvatarURL())
+                            .setTimestamp();
+                    }
+                    // Left the tracked VC (to nothing or to another VC)
+                    else if (oldChannelId === TRACKED_VC_ID && newChannelId !== TRACKED_VC_ID) {
+                        vcEmbed = new EmbedBuilder()
+                            .setColor(COLORS.VOICE_LEAVE)
+                            .setTitle('\uD83D\uDD07 Voice Channel Left')
+                            .setDescription(`**${member.user.tag} left a voice channel**`)
+                            .addFields(
+                                { name: 'User', value: `${member.user.tag} (${member.user.id})`, inline: true },
+                                { name: 'Channel', value: `${oldState.channel.name}`, inline: true }
+                            )
+                            .setThumbnail(member.user.displayAvatarURL())
+                            .setTimestamp();
+                    }
+
+                    if (vcEmbed) {
+                        await vcLogChannel.send({ embeds: [vcEmbed] });
                     }
                 }
             }
