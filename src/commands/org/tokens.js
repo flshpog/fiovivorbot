@@ -55,7 +55,8 @@ module.exports = {
                     { name: 'off', value: 'off' }
                 )),
 
-    async execute(interaction, client) {
+    async execute(interaction) {
+        const client = interaction.client;
         const toggle = interaction.options.getString('toggle');
 
         if (toggle === 'on') {
