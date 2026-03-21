@@ -14,7 +14,7 @@ function scheduleNextToken(client) {
         try {
             const channel = client.channels.cache.get(TOKEN_CHANNEL_ID);
             if (channel) {
-                await channel.send('A Totem has appeared. ');
+                await channel.send('```A Totem has appeared. ```');
             }
         } catch (error) {
             console.error('Error sending token message:', error);
@@ -24,8 +24,16 @@ function scheduleNextToken(client) {
     }, delay);
 }
 
-function startTokens(client) {
+async function startTokens(client) {
     if (tokenInterval) return false;
+    try {
+        const channel = client.channels.cache.get(TOKEN_CHANNEL_ID);
+        if (channel) {
+            await channel.send('```A Totem has appeared. ```');
+        }
+    } catch (error) {
+        console.error('Error sending initial token message:', error);
+    }
     scheduleNextToken(client);
     return true;
 }
