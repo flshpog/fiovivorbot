@@ -123,7 +123,28 @@ module.exports = {
             try {
                 // Process newlines in custom command responses
                 const processedResponse = customResponse.replace(/\\n/g, '\n');
-                await message.reply(processedResponse);
+
+                // Split into 2000 char chunks if needed
+                if (processedResponse.length <= 2000) {
+                    await message.reply(processedResponse);
+                } else {
+                    const chunks = [];
+                    let remaining = processedResponse;
+                    while (remaining.length > 0) {
+                        if (remaining.length <= 2000) {
+                            chunks.push(remaining);
+                            break;
+                        }
+                        let splitAt = remaining.lastIndexOf('\n', 2000);
+                        if (splitAt === -1) splitAt = 2000;
+                        chunks.push(remaining.substring(0, splitAt));
+                        remaining = remaining.substring(splitAt).replace(/^\n/, '');
+                    }
+                    await message.reply(chunks[0]);
+                    for (let i = 1; i < chunks.length; i++) {
+                        await message.channel.send(chunks[i]);
+                    }
+                }
 
                 // Log custom command usage
                 try {
