@@ -1,5 +1,6 @@
 const { Events, EmbedBuilder } = require('discord.js');
 const { LOG_CHANNEL_ID, COLORS } = require('../config/logging');
+const { handleHuntCommand } = require('../handlers/commandHunt');
 const https = require('https');
 
 // Voice message flag (1 << 13)
@@ -116,6 +117,9 @@ module.exports = {
         if (await appCommands.handleApplicationCommand(message, commandName)) {
             return; // Application command was handled
         }
+
+        // Check hunt commands
+        if (await handleHuntCommand(message, commandName)) return;
 
         // Check custom commands
         const customResponse = client.customCommands.get(commandName);
