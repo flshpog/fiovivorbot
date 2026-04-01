@@ -47,7 +47,7 @@ async function handleHuntCommand(message, commandName) {
         await new Promise(r => setTimeout(r, 1000));
         await message.channel.send('https://klipy.com/gifs/closing-the-door-door-1');
         await new Promise(r => setTimeout(r, 1000));
-        await message.channel.send('https://pycto.io/?hash=-HT0l9QCajIa7jymuho5uQ');
+        await message.channel.send('https://pycto.io/?hash=awmcMx8zffhxlJ3vfpzp4w');
     }
 
     return true;
