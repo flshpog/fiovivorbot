@@ -1,4 +1,5 @@
 const { Events, REST, Routes } = require('discord.js');
+const { startPeriodicCheck } = require('../handlers/stickyManager');
 // const RoleScheduler = require('../utils/roleScheduler');
 
 module.exports = {
@@ -39,6 +40,8 @@ module.exports = {
         }
 
         client.user.setActivity('Fiovivor Server', { type: 'WATCHING' });
+
+        startPeriodicCheck(client);
 
         // Initialize and start role scheduler
         // client.roleScheduler = new RoleScheduler(client);
